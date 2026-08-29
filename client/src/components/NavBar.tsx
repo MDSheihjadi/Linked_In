@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logoutThunk } from '../store/authSlice';
+import Avatar from './Avatar';
 
 export default function NavBar() {
   const dispatch = useAppDispatch();
@@ -17,17 +18,15 @@ export default function NavBar() {
   return (
     <nav className="navbar">
       <div className="navbar__inner">
-        <Link to="/feed" className="navbar__brand">
-          LinkedClone
-        </Link>
+        <Link to="/feed" className="navbar__brand">LinkedClone</Link>
         <div className="navbar__links">
           <Link to="/feed">Feed</Link>
           <Link to="/search">Search</Link>
           <Link to="/connections">Connections</Link>
-          <Link to={`/profile/${user._id}`}>Profile</Link>
-          <button onClick={handleLogout} className="navbar__logout">
-            Log out
-          </button>
+          <Link to={`/profile/${user._id}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Avatar id={user._id} name={user.name} size={26} />
+          </Link>
+          <button onClick={handleLogout} className="navbar__logout">Log out</button>
         </div>
       </div>
     </nav>

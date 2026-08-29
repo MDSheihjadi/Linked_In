@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { commentsApi } from '../api/socialApi';
+import Avatar from './Avatar';
 import type { Comment } from '../types';
 
 export default function CommentSection({ postId }: { postId: string }) {
@@ -10,7 +11,7 @@ export default function CommentSection({ postId }: { postId: string }) {
 
   const loadComments = async () => {
     if (expanded) {
-      setExpanded(false); // collapse if already open
+      setExpanded(false);
       return;
     }
     setExpanded(true);
@@ -27,43 +28,38 @@ export default function CommentSection({ postId }: { postId: string }) {
     e.preventDefault();
     if (!text.trim()) return;
     const newComment = await commentsApi.addComment(postId, text);
-    // Prepend locally instead of refetching the whole list — avoids
-    // an unnecessary round trip just to show what we already know
-    // the server accepted.
     setComments((prev) => [newComment, ...prev]);
     setText('');
   };
 
   return (
     <div style={{ marginTop: 8 }}>
-      <button
-        onClick={loadComments}
-        style={{ background: 'none', border: 'none', color: '#0a66c2', cursor: 'pointer', padding: 0 }}
-      >
+      <button onClick={loadComments} className="comment-toggle">
         {expanded ? 'Hide comments' : 'View comments'}
       </button>
 
       {expanded && (
-        <div style={{ marginTop: 8 }}>
-          <form onSubmit={handleAddComment} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <div style={{ marginTop: 10 }}>
+          <form onSubmit={handleAddComment} className="comment-input-row">
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Write a comment…"
-              style={{ flex: 1, padding: 6 }}
+              className="comment-input"
             />
-            <button type="submit">Send</button>
+            <button type="submit" className="comment-send">Send</button>
           </form>
 
-          {loading && <p style={{ fontSize: 13, color: '#666' }}>Loading comments…</p>}
+          {loading && <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Loading comments…</p>}
 
           {comments.map((c) => (
-            <div key={c._id} style={{ fontSize: 13, marginBottom: 6 }}>
-              <strong>{c.author.name}</strong>: {c.text}
+            <div key={c._id} className="comment-row">
+              <Avatar id={c.author._id} name={c.author.name} size={26} />
+              <div><strong>{c.author.name}</strong>: {c.text}</div>
             </div>
           ))}
           {!loading && comments.length === 0 && (
-            <p style={{ fontSize: 13, color: '#666' }}>No comments yet.</p>
+            <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>No comments yet.</p>
           )}
         </div>
       )}

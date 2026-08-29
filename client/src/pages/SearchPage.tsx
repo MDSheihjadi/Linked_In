@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { searchApi } from '../api/usersApi';
 import type { SearchResults } from '../api/usersApi';
+import Avatar from '../components/Avatar';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
@@ -13,8 +14,7 @@ export default function SearchPage() {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const data = await searchApi.search(query);
-      setResults(data);
+      setResults(await searchApi.search(query));
     } finally {
       setLoading(false);
     }
@@ -30,9 +30,7 @@ export default function SearchPage() {
           placeholder="Search people or posts…"
           className="search-input"
         />
-        <button type="submit" className="composer__submit">
-          Search
-        </button>
+        <button type="submit" className="composer__submit">Search</button>
       </form>
 
       {loading && <p>Searching…</p>}
@@ -44,8 +42,11 @@ export default function SearchPage() {
               <h3>People</h3>
               {results.users.map((u) => (
                 <Link key={u._id} to={`/profile/${u._id}`} className="search-result-card">
-                  <strong>{u.name}</strong>
-                  {u.headline && <div className="post-card__headline">{u.headline}</div>}
+                  <Avatar id={u._id} name={u.name} size={36} />
+                  <div>
+                    <strong>{u.name}</strong>
+                    {u.headline && <div className="post-card__headline">{u.headline}</div>}
+                  </div>
                 </Link>
               ))}
             </div>
@@ -55,9 +56,12 @@ export default function SearchPage() {
             <div className="search-section">
               <h3>Posts</h3>
               {results.posts.map((p) => (
-                <div key={p._id} className="search-result-card">
-                  <strong>{p.author.name}</strong>
-                  <p>{p.content}</p>
+                <div key={p._id} className="search-result-card" style={{ alignItems: 'flex-start' }}>
+                  <Avatar id={p.author._id} name={p.author.name} size={36} />
+                  <div>
+                    <strong>{p.author.name}</strong>
+                    <p style={{ margin: '4px 0 0' }}>{p.content}</p>
+                  </div>
                 </div>
               ))}
             </div>

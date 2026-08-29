@@ -6,6 +6,7 @@ import { connectionsApi } from '../api/socialApi';
 import { useAppSelector } from '../store/hooks';
 import type { User, Post } from '../types';
 import PostCard from '../components/PostCard';
+import Avatar from '../components/Avatar';
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -48,35 +49,34 @@ export default function ProfilePage() {
   return (
     <div className="page-container">
       <div className="profile-header">
-        <h2>{profile.name}</h2>
-        {profile.headline && <p className="profile-headline">{profile.headline}</p>}
-        {profile.bio && <p className="profile-bio">{profile.bio}</p>}
-        <p className="profile-meta">
-          {profile.connections?.length ?? 0} connections
-        </p>
+        <div className="profile-header__content">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
+            <Avatar id={profile._id} name={profile.name} size={56} />
+            <div>
+              <h2 style={{ margin: 0 }}>{profile.name}</h2>
+              {profile.headline && <p className="profile-headline">{profile.headline}</p>}
+            </div>
+          </div>
+          {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+          <p className="profile-meta">{profile.connections?.length ?? 0} CONNECTIONS</p>
 
-        {!isOwnProfile && (
-          <button
-            onClick={handleConnect}
-            disabled={connectStatus === 'sent' || alreadyConnected}
-            className="connect-btn"
-          >
-            {alreadyConnected
-              ? 'Connected'
-              : connectStatus === 'sent'
-              ? 'Request sent'
-              : 'Connect'}
-          </button>
-        )}
-        {connectStatus === 'error' && (
-          <p style={{ color: 'red', fontSize: 13 }}>
-            Could not send request (maybe already sent).
-          </p>
-        )}
+          {!isOwnProfile && (
+            <button
+              onClick={handleConnect}
+              disabled={connectStatus === 'sent' || alreadyConnected}
+              className="connect-btn"
+            >
+              {alreadyConnected ? 'Connected' : connectStatus === 'sent' ? 'Request sent' : 'Connect'}
+            </button>
+          )}
+          {connectStatus === 'error' && (
+            <p style={{ color: '#FF6552', fontSize: 13 }}>Could not send request (maybe already sent).</p>
+          )}
+        </div>
       </div>
 
       <h3>Posts</h3>
-      {posts.length === 0 && <p>No posts yet.</p>}
+      {posts.length === 0 && <p style={{ color: 'var(--ink-soft)' }}>No posts yet.</p>}
       {posts.map((post) => (
         <PostCard key={post._id} post={post} />
       ))}
