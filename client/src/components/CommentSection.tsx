@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { commentsApi } from '../api/socialApi';
 import Avatar from './Avatar';
+import { useAppDispatch } from '../store/hooks';
+import { commentCountChanged } from '../store/postsSlice';
 import type { Comment } from '../types';
 
 export default function CommentSection({ postId }: { postId: string }) {
+  const dispatch = useAppDispatch();
   const [expanded, setExpanded] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +33,9 @@ export default function CommentSection({ postId }: { postId: string }) {
     const newComment = await commentsApi.addComment(postId, text);
     setComments((prev) => [newComment, ...prev]);
     setText('');
+    // Tell the post's Redux entity its comment count went up — this
+    // is what keeps "X comments" on the card in sync without a reload.
+    dispatch(commentCountChanged({ postId, delta: 1 }));
   };
 
   return (
