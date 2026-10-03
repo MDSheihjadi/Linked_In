@@ -42,16 +42,16 @@ export const fetchFeed = createAsyncThunk<
   }
 });
 
-export const createPostThunk = createAsyncThunk<
-  Post,
-  { content: string; imageUrl?: string }
->('posts/create', async ({ content, imageUrl }, { rejectWithValue }) => {
-  try {
-    return await postsApi.createPost(content, imageUrl);
-  } catch (err) {
-    return rejectWithValue(extractErrorMessage(err));
+export const createPostThunk = createAsyncThunk<Post, { content: string; imageUrl?: string }>(
+  'posts/create',
+  async ({ content, imageUrl }, { rejectWithValue }) => {
+    try {
+      return await postsApi.createPost(content, imageUrl);
+    } catch (err) {
+      return rejectWithValue(extractErrorMessage(err));
+    }
   }
-});
+);
 
 export const deletePostThunk = createAsyncThunk<string, string>(
   'posts/delete',
@@ -91,15 +91,7 @@ const postsSlice = createSlice({
   name: 'posts',
   initialState,
   reducers: {
-    // Bumps a post's commentsCount without needing a full re-fetch.
-    // CommentSection manages its own local comment list (for speed),
-    // but that local state is invisible to the PostCard showing "X
-    // comments" — without this action, that count silently goes
-    // stale until the page reloads.
-    commentCountChanged: (
-      state,
-      action: PayloadAction<{ postId: string; delta: number }>
-    ) => {
+    commentCountChanged: (state, action: PayloadAction<{ postId: string; delta: number }>) => {
       const post = state.entities[action.payload.postId];
       if (post) {
         post.commentsCount = Math.max(0, post.commentsCount + action.payload.delta);
@@ -131,15 +123,14 @@ const postsSlice = createSlice({
         postsAdapter.upsertOne(state, action.payload.post);
       })
       .addCase(sharePostThunk.fulfilled, (state, action: PayloadAction<Post>) => {
-        postsAdapter.upsertOne(state, action.payload);
+        postsAdapter.addOne(state, action.payload);
+        if (action.payload.sharedFrom) {
+          postsAdapter.upsertOne(state, action.payload.sharedFrom);
+        }
       });
   },
 });
 
-export const postsSelectors = postsAdapter.getSelectors<RootState>(
-  (state) => state.posts
-);
-
+export const postsSelectors = postsAdapter.getSelectors<RootState>((state) => state.posts);
 export const { commentCountChanged } = postsSlice.actions;
-
 export default postsSlice.reducer;

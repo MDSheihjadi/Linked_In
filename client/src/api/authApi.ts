@@ -11,11 +11,6 @@ export interface LoginPayload {
   password: string;
 }
 
-// Every function here declares exactly what it returns. A component
-// calling authApi.login(...) gets full autocomplete on the result and
-// a compile error if it tries to access a field that doesn't exist —
-// this is the concrete payoff of the TS refactor mentioned in the
-// resume bullet.
 export const authApi = {
   signup: async (payload: SignupPayload): Promise<User> => {
     const { data } = await api.post<User>('/auth/signup', payload);

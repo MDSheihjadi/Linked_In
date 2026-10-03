@@ -33,8 +33,6 @@ export default function CommentSection({ postId }: { postId: string }) {
     const newComment = await commentsApi.addComment(postId, text);
     setComments((prev) => [newComment, ...prev]);
     setText('');
-    // Tell the post's Redux entity its comment count went up — this
-    // is what keeps "X comments" on the card in sync without a reload.
     dispatch(commentCountChanged({ postId, delta: 1 }));
   };
 
@@ -56,7 +54,7 @@ export default function CommentSection({ postId }: { postId: string }) {
             <button type="submit" className="comment-send">Send</button>
           </form>
 
-          {loading && <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Loading comments…</p>}
+          {loading && <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading comments…</p>}
 
           {comments.map((c) => (
             <div key={c._id} className="comment-row">
@@ -65,7 +63,7 @@ export default function CommentSection({ postId }: { postId: string }) {
             </div>
           ))}
           {!loading && comments.length === 0 && (
-            <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>No comments yet.</p>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>No comments yet.</p>
           )}
         </div>
       )}

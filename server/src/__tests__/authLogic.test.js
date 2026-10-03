@@ -36,14 +36,12 @@ describe('JWT signing/verification (used by generateToken/authMiddleware)', () =
   });
 
   test('an expired token is rejected', () => {
-    // expiresIn: -1 second -> already expired at creation
     const token = jwt.sign({ userId: 'abc123' }, secret, { expiresIn: -1 });
     expect(() => jwt.verify(token, secret)).toThrow(/expired/i);
   });
 });
 
 describe('Ownership check logic (used by deletePost/deleteComment)', () => {
-  // This mirrors the exact comparison used in postController.deletePost.
   function isOwner(resourceAuthorId, requestingUserId) {
     return resourceAuthorId.toString() === requestingUserId.toString();
   }
@@ -62,13 +60,10 @@ describe('Ownership check logic (used by deletePost/deleteComment)', () => {
   });
 
   test('REGRESSION GUARD: comparing ObjectIds with strict equality (no .toString()) is broken', () => {
-    // This test documents WHY the controllers always call .toString()
-    // before comparing. If someone "simplifies" deletePost by removing
-    // .toString(), this test catches it immediately in CI.
     const idStr = new mongoose.Types.ObjectId().toString();
     const a = new mongoose.Types.ObjectId(idStr);
     const b = new mongoose.Types.ObjectId(idStr);
-    expect(a === b).toBe(false); // same value, different object identity
-    expect(a.toString() === b.toString()).toBe(true); // correct comparison
+    expect(a === b).toBe(false);
+    expect(a.toString() === b.toString()).toBe(true);
   });
 });

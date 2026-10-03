@@ -1,7 +1,6 @@
 import ConnectionRequest from '../models/ConnectionRequest.js';
 import User from '../models/User.js';
 
-// POST /api/connections/request/:userId  -> send a request
 export const sendRequest = async (req, res, next) => {
   try {
     const toUserId = req.params.userId;
@@ -14,40 +13,41 @@ export const sendRequest = async (req, res, next) => {
     const targetUser = await User.findById(toUserId);
     if (!targetUser) return res.status(404).json({ message: 'User not found.' });
 
-    // The unique index on (from, to) in the model is the real
-    // guarantee against duplicates — this findOne is just for a
-    // friendlier error message instead of a raw 11000 duplicate-key
-    // error bubbling up.
-    const existing = await ConnectionRequest.findOne({
-      from: fromUserId,
-      to: toUserId,
-      status: 'pending',
-    });
+    const existing = await ConnectionRequest.findOne({ from: fromUserId, to: toUserId });
+
     if (existing) {
-      return res.status(409).json({ message: 'Request already sent.' });
+      if (existing.status === 'pending') {
+        return res.status(409).json({ message: 'Request already sent.' });
+      }
+      if (existing.status === 'accepted') {
+        return res.status(409).json({ message: 'You are already connected.' });
+      }
+      existing.status = 'pending';
+      await existing.save();
+      return res.status(201).json(existing);
     }
 
-    const request = await ConnectionRequest.create({
-      from: fromUserId,
-      to: toUserId,
-    });
+    const reverse = await ConnectionRequest.findOne({ from: toUserId, to: fromUserId, status: 'pending' });
+    if (reverse) {
+      return res.status(409).json({
+        message: 'This person already sent you a request — check your Connections page.',
+      });
+    }
 
+    const request = await ConnectionRequest.create({ from: fromUserId, to: toUserId });
     res.status(201).json(request);
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(409).json({ message: 'Request already sent.' });
+      return res.status(409).json({ message: 'A request already exists between you two.' });
     }
     next(err);
   }
 };
 
-// PATCH /api/connections/:requestId/accept
 export const acceptRequest = async (req, res, next) => {
   try {
     const request = await ConnectionRequest.findById(req.params.requestId);
     if (!request) return res.status(404).json({ message: 'Request not found.' });
-
-    // Only the RECIPIENT can accept — not the sender, not a random user.
     if (request.to.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized.' });
     }
@@ -58,15 +58,8 @@ export const acceptRequest = async (req, res, next) => {
     request.status = 'accepted';
     await request.save();
 
-    // Add each user to the other's confirmed connections list.
-    // $addToSet again — prevents duplicate entries if this somehow
-    // runs twice.
-    await User.findByIdAndUpdate(request.from, {
-      $addToSet: { connections: request.to },
-    });
-    await User.findByIdAndUpdate(request.to, {
-      $addToSet: { connections: request.from },
-    });
+    await User.findByIdAndUpdate(request.from, { $addToSet: { connections: request.to } });
+    await User.findByIdAndUpdate(request.to, { $addToSet: { connections: request.from } });
 
     res.status(200).json(request);
   } catch (err) {
@@ -75,7 +68,6 @@ export const acceptRequest = async (req, res, next) => {
   }
 };
 
-// PATCH /api/connections/:requestId/reject
 export const rejectRequest = async (req, res, next) => {
   try {
     const request = await ConnectionRequest.findById(req.params.requestId);
@@ -96,13 +88,10 @@ export const rejectRequest = async (req, res, next) => {
   }
 };
 
-// GET /api/connections/pending -> requests received by the logged-in user
 export const getPendingRequests = async (req, res, next) => {
   try {
-    const requests = await ConnectionRequest.find({
-      to: req.user._id,
-      status: 'pending',
-    }).populate('from', 'name headline avatarUrl');
+    const requests = await ConnectionRequest.find({ to: req.user._id, status: 'pending' })
+      .populate('from', 'name headline avatarUrl');
     res.status(200).json(requests);
   } catch (err) {
     next(err);

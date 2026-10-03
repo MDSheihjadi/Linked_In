@@ -6,11 +6,6 @@ import { fetchCurrentUser } from '../store/authSlice';
 export function useSessionCheck() {
   const dispatch = useAppDispatch();
   useEffect(() => {
-    // Runs once when the app mounts: asks the backend "is there a
-    // valid session cookie already?" This is how a page refresh
-    // doesn't log the user out — we never stored anything ourselves,
-    // the httpOnly cookie persisted in the browser and this call just
-    // asks the server to confirm it's still valid.
     dispatch(fetchCurrentUser());
   }, [dispatch]);
 }

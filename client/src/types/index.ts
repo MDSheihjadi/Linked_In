@@ -1,10 +1,3 @@
-// These interfaces mirror the Mongoose schemas on the backend. Keeping
-// them in one place means every component/slice that touches a User
-// or Post is checked against the SAME shape — if the backend response
-// shape changes, TypeScript will flag every place in the frontend
-// that breaks, at compile time, instead of you discovering it as a
-// runtime "undefined is not an object" in the browser.
-
 export interface AuthorSummary {
   _id: string;
   name: string;
@@ -28,6 +21,7 @@ export interface Post {
   commentsCount: number;
   sharesCount: number;
   createdAt: string;
+  sharedFrom?: Post | null;
 }
 
 export interface Comment {
@@ -46,7 +40,6 @@ export interface ConnectionRequest {
   createdAt: string;
 }
 
-// Generic shape every cursor-paginated list endpoint returns.
 export interface PaginatedResponse {
   nextCursor: string | null;
 }

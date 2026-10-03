@@ -20,6 +20,7 @@ export default function NavBar() {
       <div className="navbar__inner">
         <Link to="/feed" className="navbar__brand">LinkedClone</Link>
         <div className="navbar__links">
+          <span className="navbar__hint">Press ⌘K to search, ? for shortcuts</span>
           <Link to="/feed">Feed</Link>
           <Link to="/search">Search</Link>
           <Link to="/connections">Connections</Link>

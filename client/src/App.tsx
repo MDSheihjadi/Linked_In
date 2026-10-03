@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import AuthPage from './pages/AuthPage';
 import FeedPage from './pages/FeedPage';
 import ConnectionsPage from './pages/ConnectionsPage';
@@ -6,9 +7,25 @@ import ProfilePage from './pages/ProfilePage';
 import SearchPage from './pages/SearchPage';
 import NavBar from './components/NavBar';
 import ProtectedRoute, { useSessionCheck } from './components/ProtectedRoute';
+import { ToastProvider } from './context/ToastContext';
+import CommandPalette from './components/CommandPalette';
+import ShortcutsHelp from './components/ShortcutsHelp';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function AppRoutes() {
   useSessionCheck();
+  const [cmdkOpen, setCmdkOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    'mod+k': () => setCmdkOpen(true),
+    '?': () => setHelpOpen(true),
+    escape: () => {
+      setCmdkOpen(false);
+      setHelpOpen(false);
+    },
+  });
+
   return (
     <>
       <NavBar />
@@ -48,6 +65,8 @@ function AppRoutes() {
         />
         <Route path="/" element={<Navigate to="/feed" replace />} />
       </Routes>
+      <CommandPalette open={cmdkOpen} onClose={() => setCmdkOpen(false)} />
+      <ShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   );
 }
@@ -55,7 +74,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <ToastProvider>
+        <AppRoutes />
+      </ToastProvider>
     </BrowserRouter>
   );
 }

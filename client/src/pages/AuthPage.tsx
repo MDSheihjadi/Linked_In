@@ -54,7 +54,7 @@ export default function AuthPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="auth-input"
           />
-          {error && <p style={{ color: '#FF6552', fontSize: 13 }}>{error}</p>}
+          {error && <p style={{ color: '#B24020', fontSize: 13 }}>{error}</p>}
           <button type="submit" disabled={status === 'loading'} className="auth-submit">
             {status === 'loading' ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
           </button>

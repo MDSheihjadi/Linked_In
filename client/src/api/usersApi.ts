@@ -6,6 +6,13 @@ export const usersApi = {
     const { data } = await api.get<User>(`/users/${userId}`);
     return data;
   },
+  updateProfile: async (
+    userId: string,
+    updates: Partial<Pick<User, 'name' | 'headline' | 'bio' | 'avatarUrl'>>
+  ): Promise<User> => {
+    const { data } = await api.patch<User>(`/users/${userId}`, updates);
+    return data;
+  },
 };
 
 export interface SearchResults {

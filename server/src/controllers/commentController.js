@@ -1,7 +1,6 @@
 import Comment from '../models/Comment.js';
 import Post from '../models/Post.js';
 
-// POST /api/posts/:postId/comments
 export const addComment = async (req, res, next) => {
   try {
     const { text } = req.body;
@@ -12,16 +11,9 @@ export const addComment = async (req, res, next) => {
     const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-    const comment = await Comment.create({
-      post: post._id,
-      author: req.user._id,
-      text,
-    });
+    const comment = await Comment.create({ post: post._id, author: req.user._id, text });
     await comment.populate('author', 'name headline avatarUrl');
 
-    // Atomic increment — avoids a read-modify-write race where two
-    // simultaneous comments could both read commentsCount=5 and both
-    // write back 6, losing one. $inc is a single atomic DB operation.
     await Post.findByIdAndUpdate(post._id, { $inc: { commentsCount: 1 } });
 
     res.status(201).json(comment);
@@ -31,7 +23,6 @@ export const addComment = async (req, res, next) => {
   }
 };
 
-// GET /api/posts/:postId/comments?cursor=&limit=
 export const getComments = async (req, res, next) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 50);
@@ -44,16 +35,13 @@ export const getComments = async (req, res, next) => {
       .limit(limit)
       .populate('author', 'name headline avatarUrl');
 
-    const nextCursor =
-      comments.length === limit ? comments[comments.length - 1].createdAt : null;
-
+    const nextCursor = comments.length === limit ? comments[comments.length - 1].createdAt : null;
     res.status(200).json({ comments, nextCursor });
   } catch (err) {
     next(err);
   }
 };
 
-// DELETE /api/comments/:id
 export const deleteComment = async (req, res, next) => {
   try {
     const comment = await Comment.findById(req.params.id);

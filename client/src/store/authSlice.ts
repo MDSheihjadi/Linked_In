@@ -9,13 +9,6 @@ interface AuthState {
   user: User | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
-  // Tracks whether the ONE-TIME initial session check (fetchCurrentUser
-  // on app load) has finished, regardless of outcome. This is
-  // deliberately separate from `status`, because `status` gets reused
-  // by login/signup too — without this flag, "haven't checked session
-  // yet" and "checked, and confirmed logged out" were both represented
-  // as status: 'idle', and ProtectedRoute couldn't tell them apart,
-  // leaving it stuck on a loading screen forever for logged-out users.
   initialized: boolean;
 }
 
@@ -26,8 +19,6 @@ const initialState: AuthState = {
   initialized: false,
 };
 
-// Helper to pull a clean error message out of an Axios error without
-// `any` — this pattern repeats across every thunk in the app.
 function extractErrorMessage(err: unknown): string {
   if (axios.isAxiosError<ApiError>(err)) {
     return err.response?.data?.message ?? 'Something went wrong.';
@@ -57,9 +48,6 @@ export const loginThunk = createAsyncThunk<User, LoginPayload>(
   }
 );
 
-// Called once on app load to check "is there already a valid session
-// cookie?" — lets a refresh keep the user logged in without storing
-// anything in localStorage ourselves.
 export const fetchCurrentUser = createAsyncThunk<User, void>(
   'auth/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
@@ -71,21 +59,20 @@ export const fetchCurrentUser = createAsyncThunk<User, void>(
   }
 );
 
-export const logoutThunk = createAsyncThunk<void, void>(
-  'auth/logout',
-  async () => {
-    await authApi.logout();
-  }
-);
+export const logoutThunk = createAsyncThunk<void, void>('auth/logout', async () => {
+  await authApi.logout();
+});
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {},
-  // extraReducers handle the pending/fulfilled/rejected lifecycle of
-  // each thunk above. This is the standard RTK pattern: one place
-  // maps every async outcome to a concrete state change, instead of
-  // scattering isLoading/error flags across components.
+  reducers: {
+    userUpdated: (state, action: PayloadAction<User>) => {
+      if (state.user && state.user._id === action.payload._id) {
+        state.user = action.payload;
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(signupThunk.pending, (state) => {
@@ -118,8 +105,6 @@ const authSlice = createSlice({
         state.initialized = true;
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
-        // Not an error worth surfacing to the user — it just means
-        // "no valid session," which is a normal logged-out state.
         state.user = null;
         state.status = 'idle';
         state.initialized = true;
@@ -131,4 +116,5 @@ const authSlice = createSlice({
   },
 });
 
+export const { userUpdated } = authSlice.actions;
 export default authSlice.reducer;

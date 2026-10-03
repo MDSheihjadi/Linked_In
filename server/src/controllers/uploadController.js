@@ -1,10 +1,5 @@
 import cloudinary from '../config/cloudinary.js';
 
-/**
- * Streams the in-memory file buffer (from Multer's memoryStorage) up
- * to Cloudinary. We wrap Cloudinary's callback-based upload_stream in
- * a Promise so it can be awaited cleanly like any other async call.
- */
 function streamUpload(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -18,23 +13,15 @@ function streamUpload(buffer) {
   });
 }
 
-// POST /api/upload  (multipart/form-data, field name "image")
 export const uploadImage = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded.' });
     }
 
-    if (
-      !process.env.CLOUDINARY_CLOUD_NAME ||
-      !process.env.CLOUDINARY_API_KEY ||
-      !process.env.CLOUDINARY_API_SECRET
-    ) {
-      // Fail with a clear, actionable error rather than a confusing
-      // Cloudinary SDK stack trace if env vars were never set up.
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
       return res.status(500).json({
-        message:
-          'Image upload is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+        message: 'Image upload is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
       });
     }
 
@@ -42,7 +29,7 @@ export const uploadImage = async (req, res, next) => {
 
     res.status(201).json({
       url: result.secure_url,
-      publicId: result.public_id, // needed later if you want to delete/replace the image
+      publicId: result.public_id,
     });
   } catch (err) {
     next(err);

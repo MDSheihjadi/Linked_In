@@ -21,9 +21,7 @@ export const postsApi = {
   deletePost: async (id: string): Promise<void> => {
     await api.delete(`/posts/${id}`);
   },
-  toggleLike: async (
-    id: string
-  ): Promise<{ liked: boolean; likesCount: number; post: Post }> => {
+  toggleLike: async (id: string): Promise<{ liked: boolean; likesCount: number; post: Post }> => {
     const { data } = await api.post(`/posts/${id}/like`);
     return data;
   },

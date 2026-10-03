@@ -17,12 +17,8 @@ dotenv.config();
 
 const app = express();
 
-// --- Core middleware ---
-app.use(express.json()); // parse JSON request bodies
-app.use(cookieParser()); // parse cookies into req.cookies (needed for JWT auth)
-
-// CORS must explicitly name the frontend origin (not '*') because we
-// use credentials (cookies) — browsers reject wildcard origin + credentials.
+app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -30,7 +26,6 @@ app.use(
   })
 );
 
-// --- Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
@@ -43,7 +38,6 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// --- Error handling — must be LAST ---
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
